@@ -92,7 +92,7 @@ export default function SearchHistoryPage() {
             page={page}
             totalPages={data?.totalPages}
             onPageChange={setPage}
-            keyExtractor={(r) => r.id}
+            keyExtractor={(r) => String(r.id)}
             emptyMessage="No searches yet. Try checking a customer!"
           />
         </div>
