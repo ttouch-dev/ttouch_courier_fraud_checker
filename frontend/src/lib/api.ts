@@ -157,7 +157,7 @@ import toast from "react-hot-toast";
 import { useAuthStore } from "../store/authStore";
 import type { Courier, Plan } from "../types";
 
-const API_BASE_URL = "https://ttouch-courier-fraud-checker.onrender.com";
+const API_BASE_URL = "https://ttouch-courier-fraud-checker.onrender.com/api";
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
