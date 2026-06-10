@@ -179,7 +179,7 @@ export default function AdminUsers() {
             page={page}
             totalPages={data?.totalPages}
             onPageChange={setPage}
-            keyExtractor={(r) => r.id}
+            keyExtractor={(r) => String(r.id)}
           />
         </div>
       </div>
