@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum Plan {
+  FREE
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentInterval {
+  MONTHLY
+  YEARLY
+}
+
+model User {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  email         String         @unique
+  phone         String?
+  passwordHash  String
+  role          Role           @default(USER)
+  plan          Plan           @default(FREE)
+  apiToken      String?        @unique
+  isActive      Boolean        @default(true)
+  searchCount   Int            @default(0)
+  dailySearches Int            @default(0)
+  lastSearchReset DateTime     @default(now())
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  searchLogs    SearchLog[]
+  subscriptions Subscription[]
+  transactions  Transaction[]
+
+  @@map("users")
+}
+
+model SearchLog {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone       String
+  totalOrders Int      @default(0)
+  success     Int      @default(0)
+  cancel      Int      @default(0)
+  successRate Float    @default(0)
+  riskLevel   String   @default("LOW")
+  rawData     Json?
+  createdAt   DateTime @default(now())
+
+  @@map("search_logs")
+}
+
+model PricingPlan {
+  id           String          @id @default(auto()) @map("_id") @db.ObjectId
+  name         String          @unique
+  price        Float
+  currency     String          @default("BDT")
+  interval     PaymentInterval @default(MONTHLY)
+  searchLimit  Int             @default(20)
+  features     String[]
+  isActive     Boolean         @default(true)
+  isPopular    Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  subscriptions Subscription[]
+
+  @@map("pricing_plans")
+}
+
+model Subscription {
+  id         String             @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String             @db.ObjectId
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId     String             @db.ObjectId
+  plan       PricingPlan        @relation(fields: [planId], references: [id])
+  startDate  DateTime
+  endDate    DateTime
+  status     SubscriptionStatus @default(ACTIVE)
+  autoRenew  Boolean            @default(true)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  @@map("subscriptions")
+}
+
+model Transaction {
+  id            String            @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String            @db.ObjectId
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount        Float
+  currency      String            @default("BDT")
+  method        String
+  transactionId String            @unique
+  status        TransactionStatus @default(PENDING)
+  planName      String
+  gatewayData   Json?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@map("transactions")
+}
+
+model Courier {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String   @unique
+  slug         String   @unique
+  logo         String   @default("📦")
+  apiUrl       String
+  apiKey       String?
+  isActive     Boolean  @default(true)
+  totalSearches Int     @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("couriers")
+}
